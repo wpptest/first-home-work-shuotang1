@@ -1,23 +1,37 @@
 // ----------------------------------------------
 // main.cpp
-// �������������Դ���
+// ¹¦ÄÜÃèÊö£º²âÊÔ´úÂë
 // ----------------------------------------------
 
 #include"kjplagsimilarity.h"
 
 #include<iostream>
 
-int main()
+int main(int argc, char* argv[])
 {
-	KJplagSimilarity* kJplagSimilarity = new KJplagSimilarity();
+    for (int i = 1; i < argc; i++) // 从第二个参数开始遍历，排除程序名参数
+    {
+        std::string arg = argv[i];
+        KJplagSimilarity* kJplagSimilarity = new KJplagSimilarity();
 
-	//kJplagSimilarity->processDirectory("D:\\cpp-professional-23-tasks\\huangqiping\\ClassTask\\KMemoryMapProject\\processB");
+        if (arg == "--check")
+        {
+            // 调用函数1  
+            std::string filePath = argv[i + 1]; // 获取下一个参数作为文件路径  
+            kJplagSimilarity->checkDirectorySimilarity(filePath);
+        }
+        else if (arg == "--compare")
+        {
+            // 调用函数2  
+            std::string directoryPath1 = argv[i + 1]; // 获取下一个参数作为第一个目录路径  
+            std::string directoryPath2 = argv[i + 2]; // 获取下两个参数作为第二个目录路径  
+            int similarityThreshold = std::stoi(argv[i + 3]); // 获取下三个参数作为相似度阈值  
+            kJplagSimilarity->compareTwoDirectoryFileSimilarity(directoryPath1, directoryPath2, similarityThreshold);
+        }
 
-	//kJplagSimilarity->checkDirectorySimilarity("D:\\test");
-	kJplagSimilarity->compareTwoDirectoryFileSimilarity("D:\\cpp-professional-23-tasks\\chengda1\\ClassTask", "D:\\cpp-professional-23-tasks\\chenhao21\\ClassTask",3);
-	
-	delete kJplagSimilarity;
-	kJplagSimilarity = nullptr;
+        delete kJplagSimilarity;
+        kJplagSimilarity = nullptr;
+    }
 
-	return 0;
+    return 0;
 }
