@@ -30,21 +30,21 @@ void removeBomCharacter(std::string& filePath)
     if (!file)
         return;
 
-    // ¶ÁÈ¡ÎÄ¼şÇ°3¸ö×Ö½Ú  
+    // è¯»å–æ–‡ä»¶å‰3ä¸ªå­—èŠ‚  
     char bom[3];
     file.read(bom, 3);
 
-    // ¼ì²éÊÇ·ñÊÇUTF-8 BOM  
+    // æ£€æŸ¥æ˜¯å¦æ˜¯UTF-8 BOM  
     if (!(file && bom[0] == (char)0xEF && bom[1] == (char)0xBB && bom[2] == (char)0xBF))
-        return;              // ÎÄ¼ş²»ÊÇUTF-8 BOM±àÂë 
+        return;              // æ–‡ä»¶ä¸æ˜¯UTF-8 BOMç¼–ç  
     
-    // ÎÄ¼şÊÇUTF-8 BOM±àÂë,¶ÁÈ¡ÎÄ¼şÄÚÈİ  
+    // æ–‡ä»¶æ˜¯UTF-8 BOMç¼–ç ,è¯»å–æ–‡ä»¶å†…å®¹  
     std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
     std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     std::wstring utf16_content = converter.from_bytes(content);
     file.close();
 
-    // ±£´æ×ª»»ºóµÄÄÚÈİµ½ÎÄ¼ş  
+    // ä¿å­˜è½¬æ¢åçš„å†…å®¹åˆ°æ–‡ä»¶  
     std::ofstream outfile(filePath, std::ios::binary);
     if (!outfile)
         return;
@@ -64,7 +64,7 @@ void KJplagSimilarity::processDirectory(const std::string& directoryPath)
                 if (std::strcmp(fileData.cFileName, ".") != 0 && std::strcmp(fileData.cFileName, "..") != 0) 
                 {
                     std::string subdirectoryPath = directoryPath + "\\" + fileData.cFileName;
-                    processDirectory(subdirectoryPath);  // µİ¹é´¦Àí×ÓÄ¿Â¼  
+                    processDirectory(subdirectoryPath);  // é€’å½’å¤„ç†å­ç›®å½•  
                 }
             }
             else 
@@ -85,21 +85,21 @@ void KJplagSimilarity::processDirectory(const std::string& directoryPath)
 
 void KJplagSimilarity::compareTwoDirectoryFileSimilarity(std::string oldFilePath, std::string newFilePath,int n)
 {
-    char fileBuffer[_MAX_PATH];
-    if (_fullpath(fileBuffer, __FILE__, _MAX_PATH) != nullptr)
-    {
-        std::string filePath = fileBuffer;
+   char fileBuffer[_MAX_PATH];
+    if (_fullpath(fileBuffer, __FILE__, _MAX_PATH) == nullptr)
+        return;
 
-        // »ñÈ¡¸¸Ä¿Â¼Â·¾¶  
-        std::size_t lastSlash = filePath.find_last_of("/\\");
-        std::string parentPath = filePath.substr(0, lastSlash);
+    std::string filePathTemp = fileBuffer;
 
-        // ÇĞ»»µ½¹¤×÷Â·¾¶  
-        if (_chdir(parentPath.c_str()) != 0)
-            return;
-    }
+    // è·å–çˆ¶ç›®å½•è·¯å¾„  
+    std::size_t lastSlash = filePathTemp.find_last_of("/\\");
+    std::string parentPath = filePathTemp.substr(0, lastSlash) + "\\jdk - 17.0.8\\bin";
 
-    std::string command = "D:\\jdk-17\\jdk-17_windows-x64_bin\\jdk-17.0.8\\bin\\java -jar jplag-4.3.0-jar-with-dependencies.jar -l cpp -r result -old " + oldFilePath + " -new " + newFilePath;
+    // åˆ‡æ¢åˆ°å·¥ä½œè·¯å¾„  
+    if (_chdir(parentPath.c_str()) != 0)
+        return;
+
+    std::string command = "java -jar jplag-4.3.0-jar-with-dependencies.jar -l cpp -r result -old " + oldFilePath + " -new " + newFilePath;
 
 	FILE* pipe = _popen(command.c_str(), "r");
 	if (!pipe)
@@ -115,12 +115,12 @@ void KJplagSimilarity::compareTwoDirectoryFileSimilarity(std::string oldFilePath
 
             if (line.find("[INFO] ParallelComparisonStrategy - Comparing") != std::string::npos)
             {
-                // ÌáÈ¡ÎÄ¼şÃûºÍÏàËÆ¶È  
+                // æå–æ–‡ä»¶åå’Œç›¸ä¼¼åº¦  
                 size_t colonPos = line.find_last_of(":");
                 std::string fileName = line.substr((line.find("Comparing") + 10), (colonPos - line.find("Comparing") - 10));
                 double similarity = std::stod(line.substr(colonPos + 1));
 
-                // ´´½¨Comparison½á¹¹Ìå²¢Ìí¼Óµ½±È½Ï½á¹ûÏòÁ¿ÖĞ  
+                // åˆ›å»ºComparisonç»“æ„ä½“å¹¶æ·»åŠ åˆ°æ¯”è¾ƒç»“æœå‘é‡ä¸­  
                 Comparison comparison;
                 comparison.fileName = fileName;
                 comparison.similarity = similarity;
@@ -131,14 +131,14 @@ void KJplagSimilarity::compareTwoDirectoryFileSimilarity(std::string oldFilePath
 
     _pclose(pipe);
 
-    // °´ÏàËÆ¶È½µĞòÅÅĞò±È½Ï½á¹û  
+    // æŒ‰ç›¸ä¼¼åº¦é™åºæ’åºæ¯”è¾ƒç»“æœ  
     std::sort(comparisons.begin(), comparisons.end(), compareSimilarity);
 
-    // Êä³öÏàËÆ¶È×î¸ßµÄÇ°n¸öÎÄ¼şÃûºÍÏàËÆ¶È  
+    // è¾“å‡ºç›¸ä¼¼åº¦æœ€é«˜çš„å‰nä¸ªæ–‡ä»¶åå’Œç›¸ä¼¼åº¦  
     int len = min(comparisons.size(), n);
     for (int i = 0; i < len; ++i) 
     {
-        std::cout << "ÎÄ¼şÃû: " << comparisons[i].fileName << ", ÏàËÆ¶È: " << comparisons[i].similarity << std::endl;
+        std::cout << "æ–‡ä»¶å: " << comparisons[i].fileName << ", ç›¸ä¼¼åº¦: " << comparisons[i].similarity << std::endl;
     }
 }
 
@@ -150,16 +150,16 @@ void KJplagSimilarity::checkDirectorySimilarity(std::string filePath)
 
     std::string filePathTemp = fileBuffer;
 
-    // »ñÈ¡¸¸Ä¿Â¼Â·¾¶  
+    // è·å–çˆ¶ç›®å½•è·¯å¾„  
     std::size_t lastSlash = filePathTemp.find_last_of("/\\");
-    std::string parentPath = filePathTemp.substr(0, lastSlash);
+   std::string parentPath = filePathTemp.substr(0, lastSlash) + "\\jdk - 17.0.8\\bin";
 
-    // ÇĞ»»µ½¹¤×÷Â·¾¶  
+    // åˆ‡æ¢åˆ°å·¥ä½œè·¯å¾„  
     if (_chdir(parentPath.c_str()) != 0)
         return;
 
-    //±È½ÏÏàËÆ¶ÈÇ°ÈıµÄÃüÁî
-    std::string command = "D:\\jdk-17\\jdk-17_windows-x64_bin\\jdk-17.0.8\\bin\\java -jar jplag-4.3.0-jar-with-dependencies.jar -l cpp " + filePath;
+    //æ¯”è¾ƒç›¸ä¼¼åº¦å‰ä¸‰çš„å‘½ä»¤
+   std::string command = "java -jar jplag-4.3.0-jar-with-dependencies.jar -l cpp " + filePath;
 
     FILE* pipe = _popen(command.c_str(), "r");
     if (!pipe)
@@ -175,12 +175,12 @@ void KJplagSimilarity::checkDirectorySimilarity(std::string filePath)
 
             if (line.find("[INFO] ParallelComparisonStrategy - Comparing") != std::string::npos)
             {
-                // ÌáÈ¡ÎÄ¼şÃûºÍÏàËÆ¶È  
+                // æå–æ–‡ä»¶åå’Œç›¸ä¼¼åº¦  
                 size_t colonPos = line.find_last_of(":");
                 std::string fileName = line.substr((line.find("Comparing") + 10), (colonPos - line.find("Comparing") - 10));
                 double similarity = std::stod(line.substr(colonPos + 1));
 
-                // ´´½¨Comparison½á¹¹Ìå²¢Ìí¼Óµ½±È½Ï½á¹ûÏòÁ¿ÖĞ  
+                // åˆ›å»ºComparisonç»“æ„ä½“å¹¶æ·»åŠ åˆ°æ¯”è¾ƒç»“æœå‘é‡ä¸­  
                 Comparison comparison;
                 comparison.fileName = fileName;
                 comparison.similarity = similarity;
@@ -191,13 +191,13 @@ void KJplagSimilarity::checkDirectorySimilarity(std::string filePath)
 
     _pclose(pipe);
 
-    // °´ÏàËÆ¶È½µĞòÅÅĞò±È½Ï½á¹û  
+    // æŒ‰ç›¸ä¼¼åº¦é™åºæ’åºæ¯”è¾ƒç»“æœ  
     std::sort(comparisons.begin(), comparisons.end(), compareSimilarity);
 
-    // ´Ó¸ßµ½µÍÊä³öÎÄ¼şÃûºÍÏàËÆ¶È  
+    // ä»é«˜åˆ°ä½è¾“å‡ºæ–‡ä»¶åå’Œç›¸ä¼¼åº¦  
     int len = comparisons.size();
     for (int i = 0; i < len; ++i)
     {
-        std::cout << "ÎÄ¼şÃû: " << comparisons[i].fileName << ", ÏàËÆ¶È: " << comparisons[i].similarity << std::endl;
+        std::cout << "æ–‡ä»¶å: " << comparisons[i].fileName << ", ç›¸ä¼¼åº¦: " << comparisons[i].similarity << std::endl;
     }
 }
