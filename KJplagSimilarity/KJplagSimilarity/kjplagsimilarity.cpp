@@ -93,13 +93,9 @@ void KJplagSimilarity::compareTwoDirectoryFileSimilarity(std::string oldFilePath
 
     // 获取父目录路径  
     std::size_t lastSlash = filePathTemp.find_last_of("/\\");
-    std::string parentPath = filePathTemp.substr(0, lastSlash) + "\\jdk - 17.0.8\\bin";
+    std::string parentPath = filePathTemp.substr(0, lastSlash) + "\\jdk-17.0.8\\bin";
 
-    // 切换到工作路径  
-    if (_chdir(parentPath.c_str()) != 0)
-        return;
-
-    std::string command = "java -jar jplag-4.3.0-jar-with-dependencies.jar -l cpp -r result -old " + oldFilePath + " -new " + newFilePath;
+    std::string command = parentPath + "\\java -jar " + parentPath + "\\jplag-4.3.0-jar-with-dependencies.jar -l cpp -r result -old " + oldFilePath + " -new " + newFilePath;
 
 	FILE* pipe = _popen(command.c_str(), "r");
 	if (!pipe)
@@ -152,14 +148,10 @@ void KJplagSimilarity::checkDirectorySimilarity(std::string filePath)
 
     // 获取父目录路径  
     std::size_t lastSlash = filePathTemp.find_last_of("/\\");
-   std::string parentPath = filePathTemp.substr(0, lastSlash) + "\\jdk - 17.0.8\\bin";
-
-    // 切换到工作路径  
-    if (_chdir(parentPath.c_str()) != 0)
-        return;
+   std::string parentPath = filePathTemp.substr(0, lastSlash) + "\\jdk-17.0.8\\bin";
 
     //比较相似度前三的命令
-   std::string command = "java -jar jplag-4.3.0-jar-with-dependencies.jar -l cpp " + filePath;
+    std::string command = parentPath + "\\java -jar " + parentPath + "\\jplag-4.3.0-jar-with-dependencies.jar -l cpp " + filePath;
 
     FILE* pipe = _popen(command.c_str(), "r");
     if (!pipe)
